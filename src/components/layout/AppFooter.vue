@@ -1,18 +1,49 @@
 <!-- src/components/layout/AppFooter.vue -->
-<script setup lang="ts">
-import { useSite } from '@/composables/useSite'
-
-const { siteTitle } = useSite()
-</script>
-
 <template>
-  <v-footer color="grey-darken-3" app>
-    <v-container>
-      <v-row>
-        <v-col cols="12" class="text-center">
-          <span>&copy; {{ new Date().getFullYear() }} - {{ siteTitle }}</span>
-        </v-col>
-      </v-row>
-    </v-container>
+  <v-footer padless>
+    <v-row justify="center" no-gutters>
+      <v-col class="py-4 text-center" cols="12">
+        <v-btn
+          v-for="link in links"
+          :key="link.title"
+          :href="link.href"
+          variant="text"
+          class="mx-2 text-white"
+          target="_blank"
+        >
+          {{ link.title }}
+        </v-btn>
+      </v-col>
+      
+      <v-col class="py-4 text-center" cols="12">
+        <strong class="d-block text-white">
+          © {{ new Date().getFullYear() }} Cultural Nexus - Todos los derechos reservados
+        </strong>
+      </v-col>
+    </v-row>
   </v-footer>
 </template>
+
+<script setup lang="ts">
+const links = [
+  { title: 'Home', href: '/' },
+  { title: 'About Us', href: '/about' },
+  { title: 'Contact', href: '/contact' },
+]
+</script>
+
+<style scoped>
+.v-footer {
+  background-color: var(--palette-accent1) !important;
+  color: var(--palette-headings) !important;
+}
+
+.v-footer a {
+  color: var(--palette-headings) !important;
+}
+
+.v-footer a:hover {
+  color: var(--palette-accent2) !important;
+  text-decoration: underline;
+}
+</style>

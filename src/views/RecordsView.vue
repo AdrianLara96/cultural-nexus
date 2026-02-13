@@ -32,6 +32,14 @@ onMounted(() => {
   <v-container>
     <v-row justify="center">
       <v-col cols="12">
+        <v-btn 
+          color="secondary" 
+          @click="$router.go(-2)" 
+          class="mb-4 mr-4"
+          variant="flat"
+        >
+          ← Volver a la lista
+        </v-btn>
         <h1 class="text-h3 mb-4">Todos los ítems</h1>
       </v-col>
     </v-row>

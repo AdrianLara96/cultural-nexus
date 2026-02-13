@@ -1,0 +1,19 @@
+:root {
+  /* Colores de fondo */
+  --palette-bg: #f8f8f1;
+  --palette-bg-alt: #e6e6d4;
+
+  /* Colores de texto */
+  --palette-text: #262623;
+  --palette-headings: #eaead7;
+
+  /* Colores de acento */
+  --palette-accent1: #455245;
+  --palette-accent1-strong: #353f35;
+  --palette-accent2: #d87173;
+  --palette-accent2-strong: #a35657;
+
+  /* Otros colores */
+  --palette-border: #f3f3e9;
+  --palette-muted: #d6d6c6;
+}

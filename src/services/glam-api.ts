@@ -10,6 +10,58 @@ import type {
 } from '@/types/glam'
 
 /**
+ * Transforma un objeto raw de la API GLAM a GLAMRecord con campos mapeados
+ */
+function mapRawRecordToGLAMRecord(rawRecord: any): GLAMRecord {
+  return {
+    id: rawRecord.id,
+    title: rawRecord.title,
+    description: rawRecord.description,
+    date: rawRecord.date,
+    // Mapear author a creator
+    creator: rawRecord.author,
+    // Mapear thumbnail a imageUrl
+    imageUrl: rawRecord.thumbnail,
+    
+    
+    collection_title: rawRecord.collection_title,
+    // Mantener otros campos importantes
+    author: rawRecord.author,
+    children: rawRecord.children,
+    collection_id: rawRecord.collection_id,
+    collections: rawRecord.collections,
+    collections_titles: rawRecord.collections_titles,
+    commit_message: rawRecord.commit_message,
+    groups: rawRecord.groups,
+    is_archived: rawRecord.is_archived,
+    last_commit_message: rawRecord.last_commit_message,
+    last_version_number: rawRecord.last_version_number,
+    media_items: rawRecord.media_items,
+    messages: rawRecord.messages,
+    metadata_fields: rawRecord.metadata_fields,
+    metadata_fields_order: rawRecord.metadata_fields_order,
+    ocr_data: rawRecord.ocr_data,
+    ontology_versions: rawRecord.ontology_versions,
+    owner_user_id: rawRecord.owner_user_id,
+    parent: rawRecord.parent,
+    parents: rawRecord.parents,
+    published: rawRecord.published,
+    resource_class: rawRecord.resource_class,
+    resource_class_id: rawRecord.resource_class_id,
+    sites: rawRecord.sites,
+    template: rawRecord.template,
+    template_id: rawRecord.template_id,
+    thumbnail: rawRecord.thumbnail,
+    thumbnail_attachment: rawRecord.thumbnail_attachment,
+    thumbnail_attachment_id: rawRecord.thumbnail_attachment_id,
+    thumbnail_media: rawRecord.thumbnail_media,
+    thumbnail_media_id: rawRecord.thumbnail_media_id,
+    type: rawRecord.type,
+    versions: rawRecord.versions,
+  }
+}
+
+/**
  * Construye la URL completa para un endpoint
  */
 function buildUrl(endpoint: string, params?: Record<string, any>): string {
@@ -118,14 +170,25 @@ class GLAMApiClient {
       filters: combinedFilters,
     }
 
-    return this.request<GLAMApiResponse<GLAMRecord>>('/api/glam/record', params)
+    const response = await this.request<any>('/api/glam/record', params)
+    
+    // Transformar la respuesta para mapear los campos
+    return {
+      items: response.items.map(mapRawRecordToGLAMRecord),
+      total: response.total,
+      page: response.page,
+      pageSize: response.pageSize,
+      hasNext: response.hasNext,
+      hasPrevious: response.hasPrevious,
+    }
   }
 
   /**
    * Obtiene un record específico por ID
    */
   async getRecordById(id: string): Promise<GLAMRecord> {
-    return this.request<GLAMRecord>(`/api/glam/record/${id}`)
+    const rawRecord = await this.request<any>(`/api/glam/record/${id}`)
+    return mapRawRecordToGLAMRecord(rawRecord)
   }
 
   /**

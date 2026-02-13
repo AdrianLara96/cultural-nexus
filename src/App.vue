@@ -31,6 +31,23 @@ function toggleDrawer() {
 }
 
 .v-application {
-  background-color: #f5f5f5 !important;
+  background-color: var(--palette-bg) !important;
 }
+
+.v-app-bar {
+  background-color: var(--palette-accent1) !important;
+}
+
+.text-primary {
+  color: var(--palette-accent1) !important;
+}
+
+.text-secondary {
+  color: var(--palette-accent2) !important;
+}
+
+.border {
+  border-color: var(--palette-border) !important;
+}
+
 </style>

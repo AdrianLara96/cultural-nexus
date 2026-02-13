@@ -74,6 +74,13 @@ defineProps<{
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--palette-border);
+  background-color: var(--palette-bg);
+  color: var(--palette-text);
+}
+
+.record-card :hover {
+  border-color: var(--palette-accent1);
 }
 
 .record-card :deep(.v-card-text) {

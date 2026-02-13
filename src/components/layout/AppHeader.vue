@@ -1,64 +1,73 @@
 <!-- src/components/layout/AppHeader.vue -->
-<script setup lang="ts">
-import { useSite } from '@/composables/useSite'
-import { useDisplay } from 'vuetify'
-
-const { siteTitle, navItems, loading, thumbnailUrl } = useSite()
-const display = useDisplay()
-
-
-</script>
 
 <template>
-  <v-app-bar
-    color="primary"
-    dark
-    elevate-on-scroll
-  >
-    <v-app-bar-nav-icon
-      v-if="display.mobile.value"
-      variant="text"
-      @click="$emit('toggleDrawer')"
-    ></v-app-bar-nav-icon>
-
+  <v-app-bar color="primary" flat>
+    <v-app-bar-nav-icon @click="toggleDrawer"></v-app-bar-nav-icon>
+    
     <v-app-bar-title>
-      <div class="d-flex align-center">
-        <v-img
-          v-if="thumbnailUrl"
-          :src="thumbnailUrl"
-          max-height="40"
-          max-width="40"
-          class="mr-2"
-          contain
-        ></v-img>
-        <span>{{ siteTitle }}</span>
-      </div>
+      <router-link to="/" class="text-decoration-none text-white">
+        Cultural Nexus
+      </router-link>
     </v-app-bar-title>
 
-    <v-spacer></v-spacer>
-
-    <div v-if="navItems && navItems.length > 0">
-      <v-tabs
-        v-if="!loading && navItems.length > 0"
-        centered
-        hide-slider
-      >
-        <v-tab
-          v-for="item in navItems"
-          :key="item.id"
-        >
-          {{ item.label }}
-        </v-tab>
-      </v-tabs>
-    </div>
-
-    <v-spacer></v-spacer>
+    <template v-slot:append>
+      <v-btn icon="mdi-magnify"></v-btn>
+    </template>
   </v-app-bar>
+
+  <v-navigation-drawer v-model="drawer" temporary>
+    <v-list nav>
+      <v-list-item link to="/" :active="isActive('/')">
+        <v-list-item-title>Inicio</v-list-item-title>
+      </v-list-item>
+      <v-list-item link to="/records" :active="isActive('/records')">
+        <v-list-item-title>Ver todos los registros</v-list-item-title>
+      </v-list-item>
+      <v-list-item link to="/collections" :active="isActive('/collections')">
+        <v-list-item-title>Ver todas las colecciones</v-list-item-title>
+      </v-list-item>
+    </v-list>
+  </v-navigation-drawer>
 </template>
 
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const drawer = ref(false)
+
+const toggleDrawer = () => {
+  drawer.value = !drawer.value
+}
+
+const isActive = (path: string) => {
+  return route.path === path
+}
+</script>
+
 <style scoped>
-.v-app-bar-title {
-  font-size: 1.5rem;
-  font-weight: bold;
+/* Aplica variables CSS directamente */
+.v-app-bar {
+  background-color: var(--palette-accent1) !important;
+  color: var(--palette-headings) !important;
+}
+
+.v-app-bar-title a {
+  color: var(--palette-headings) !important;
+}
+
+.v-navigation-drawer {
+  background-color: var(--palette-bg) !important;
+  color: var(--palette-text) !important;
+}
+
+.v-list-item-title {
+  color: var(--palette-text) !important;
+}
+
+.v-list-item--active {
+  background-color: var(--palette-bg-alt) !important;
+  color: var(--palette-accent1) !important;
 }
 </style>
