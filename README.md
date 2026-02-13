@@ -1,48 +1,90 @@
-# cultural-nexus
+# Cultural Nexus
 
-This template should help get you started developing with Vue 3 in Vite.
+Una plataforma frontend moderna para explorar y descubrir recursos culturales digitales (galerías, bibliotecas, archivos y museos) a través de la API GLAM.
 
-## Recommended IDE Setup
+# 🚀 Características
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Interfaz Responsiva**: Diseño adaptable a dispositivos móviles y escritorio
+- **Integración GLAM API**: Conexión directa con la API de GLAM para acceder a colecciones culturales
+- **Vistas Detalladas**: Navegación a vistas de detalle para registros y colecciones individuales
+- **Búsqueda y Filtrado**: Sistema avanzado de búsqueda y filtrado de recursos
+- **Paginación**: Gestión eficiente de grandes volúmenes de datos
+- **Navegación Intuitiva**: Menús y rutas claras para una experiencia de usuario fluida
 
-## Recommended Browser Setup
+# 🛠️ Tecnologías Utilizadas
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- [Vue 3](https://vuejs.org/) - Framework progresivo de JavaScript
+- [TypeScript](https://www.typescriptlang.org/) - Superset de JavaScript con tipado estático
+- [Vuetify 3](https://vuetifyjs.com/) - Biblioteca de componentes Material Design
+- [Vue Router](https://router.vuejs.org/) - Sistema de enrutamiento
+- [Vite](https://vitejs.dev/) - Herramienta de construcción rápida
+- [GLAM API](https://libnamic.eu/) - API para acceso a recursos culturales digitales
 
-## Type Support for `.vue` Imports in TS
+# 📋 Prerrequisitos
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+Antes de comenzar, asegúrate de tener instalado:
 
-## Customize configuration
+- [Node.js](https://nodejs.org/) (versión 16 o superior)
+- [npm](https://www.npmjs.com/) o [yarn](https://yarnpkg.com/)
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+# 📦 Instalación
 
-## Project Setup
+1. Clona el repositorio
+   ```bash
+   git clone <URL_DEL_REPOSITORIO>
+   cd cultural-nexus
 
-```sh
-npm install
-```
+2. Instala las dependencias
+    ```bash
+    npm install
+    # o
+    yarn install
 
-### Compile and Hot-Reload for Development
+3. Inicia el servidor de desarrollo
+    ```bash
+    npm run dev
+    # o
+    yarn dev
 
-```sh
-npm run dev
-```
+4. Abre tu navegador en http://localhost:5173
 
-### Type-Check, Compile and Minify for Production
+# 🧪 Scripts Disponibles
 
-```sh
-npm run build
-```
+En el directorio del proyecto, puedes ejecutar:
+- npm run dev - Inicia el servidor de desarrollo
+- npm run build - Crea una versión optimizada para producción
+- npm run preview - Previsualiza la versión de producción localmente
+- npm run lint - Ejecuta el linter (si está configurado)
 
-### Lint with [ESLint](https://eslint.org/)
+# 🗂️ Estructura del Proyecto
 
-```sh
-npm run lint
-```
+src/
+├── components/     # Componentes reutilizables
+│   └── glam/       # Componentes específicos de GLAM
+├── composables/    # Funciones reutilizables de Vue
+├── views/          # Vistas de página
+├── router/         # Configuración de rutas
+├── services/       # Lógica de conexión con APIs
+├── types/          # Definiciones de tipos TypeScript
+└── config/         # Configuraciones del proyecto
+
+# 🌐 Despliegue
+
+Para desplegar esta aplicación:
+1. Genera la versión de producción:
+´´´bash
+  npm run build
+
+2. Los archivos compilados estarán en la carpeta dist/
+3. Sirve los contenidos de dist/ con un servidor web estático
+
+# 🤝 Contribuciones
+
+Las contribuciones son bienvenidas. Para cambios mayores, por favor abre un issue primero para discutir qué te gustaría cambiar.
+
+
+# 📞 Contacto
+
+Adrián Lara Moncayo - adrianlaram@gmail.com - www.linkedin.com/in/adrianlaramoncayo
+
+Enlace del proyecto: https://github.com/AdrianLara96/cultural-nexus
