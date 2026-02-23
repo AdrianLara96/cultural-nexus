@@ -1,6 +1,6 @@
-<!-- src/views/RecordDetailView.vue -->
 <template>
   <v-container>
+    <!-- Botones 'volver' y 'metadatos' -->
     <v-row justify="center">
       <v-col cols="12">
         <v-btn 
@@ -23,71 +23,87 @@
       </v-col>
     </v-row>
 
+    <!-- Tarjeta del ítem -->
     <v-row justify="center">
       <v-col cols="12" md="10" lg="8">
         <v-card v-if="record" class="pa-4">
+          
+          <!-- Título -->
           <v-card-title class="text-h4 mb-4">
             {{ record.title }}
           </v-card-title>
           
+          <!-- Descripción -->
           <v-card-subtitle v-if="record.description" class="text-h6 mb-4">
             {{ record.description }}
           </v-card-subtitle>
 
-          <v-card-text>
-            <!-- Imagen del registro -->
-            <div v-if="record.thumbnail" class="mb-6">
-              <v-img 
-                :src="record.thumbnail" 
-                :alt="record.title"
-                max-height="400"
-                contain
-              ></v-img>
-            </div>
+          <!-- Imagen del registro -->
+          <div v-if="record.thumbnail" class="mb-6">
+            <v-img 
+              :src="record.thumbnail" 
+              :alt="record.title"
+              max-height="400"
+              contain
+            ></v-img>
+          </div>
 
-            <!-- Mostrar metadatos básicos siempre -->
+          <!-- Tarjeta de detalles -->
+          <v-card-text>
+
+            <!-- Metadatos básicos mostrados siempre -->
             <div class="mb-4">
               <h3 class="text-h6">Información básica</h3>
               <v-table density="compact">
                 <tbody>
+
+                  <!-- Autor -->
                   <tr v-if="hasValidValue(record.author)">
-                    <td><strong>Autor</strong></td>
+                    <td><strong> Autor </strong></td>
                     <td>{{ formatMetadataValue(record.author) }}</td>
                   </tr>
+                  
+                  <!-- Fecha -->
                   <tr v-if="hasValidValue(record.date)">
-                    <td><strong>Fecha</strong></td>
+                    <td><strong> Fecha </strong></td>
                     <td>{{ record.date }}</td>
                   </tr>
-                  <tr v-if="hasValidValue(record.type)">
+                  
+                  <!-- Tipo de ítem -->
+                  <tr v-if="hasValidValue(getTypeValue)">
                     <td><strong>Tipo</strong></td>
-                    <td>{{ record.type }}</td>
+                    <td>{{ getTypeValue }}</td>
                   </tr>
-                  <tr v-if="hasValidValue(record.collection_id)">
-                    <td><strong>Colección ID</strong></td>
+                  
+                  <!-- Colección a la que pertenece -->
+                  <tr v-if="hasValidValue(getCollectionName)">
+                    <td><strong>Colección:</strong></td>
                     <td>
-                      <router-link 
-                        v-if="record.collection_id"
-                        :to="{ name: 'collection-detail', params: { id: record.collection_id.toString() } }"
+                      <RouterLink 
+                        :to="`/collections/${record.collection_id}`" 
                         class="text-primary"
                       >
-                        Ver colección ({{ record.collection_id }})
-                      </router-link>
+                        {{ getCollectionName }}
+                      </RouterLink>
                     </td>
                   </tr>
+
                 </tbody>
               </v-table>
             </div>
 
-            <!-- Mostrar metadatos detallados solo si showMetadata es true -->
+            <!-- Metadatos mostrados solo si showMetadata es true -->
             <div v-if="showMetadata" class="mb-4">
               <h3 class="text-h6">Metadatos detallados</h3>
               <v-table density="compact">
                 <tbody>
+
                   <!-- Mostrar todos los metadatos estructurados solo si están activados -->
                   <tr v-for="[key, value] in getValidMetadataFields" :key="key">
                     <td><strong>{{ formatMetadataKey(key) }}</strong></td>
                     <td>{{ formatMetadataValue(value) }}</td>
                   </tr>
+
                 </tbody>
               </v-table>
             </div>
@@ -127,20 +143,31 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { computed, onMounted, ref } from 'vue'
-import { getRecordById } from '@/services/glam-api'
-import type { GLAMRecord } from '@/types/glam'
+import { getRecordById, getCollectionById } from '@/services/glam-api'
+import type { GLAMRecord, GLAMCollection } from '@/types/glam'
 
 const route = useRoute()
 const recordId = computed(() => route.params.id as string)
 const record = ref<GLAMRecord | null>(null)
+const collection = ref<GLAMCollection | null>(null)
 const loading = ref(true)
-const showMetadata = ref(false) // Controla la visibilidad de los metadatos detallados
+const showMetadata = ref(false) 
 
 onMounted(async () => {
   try {
     loading.value = true
     const recordData = await getRecordById(recordId.value)
     record.value = recordData
+
+    // Cargar la colección si el record tiene información de colección
+    if (record.value?.collection_id) {
+      try {
+        const collectionData = await getCollectionById(String(record.value.collection_id))
+        collection.value = collectionData
+      } catch (error) {
+        console.error('Error loading collection:', error)
+      }
+    }
   } catch (error) {
     console.error('Error loading record:', error)
     record.value = null
@@ -149,9 +176,47 @@ onMounted(async () => {
   }
 })
 
+// Computeds para obtener los valores correctos
+const getTypeValue = computed(() => {
+  if (!record.value) return ''
+  
+  // Buscar tipo en resource_class (es un array [id, nombre])
+  if (record.value.resource_class && Array.isArray(record.value.resource_class) && record.value.resource_class.length >= 2) {
+    return record.value.resource_class[1] // Segundo elemento es el nombre
+  }
+  
+  // Buscar tipo en type_label o type
+  return record.value.type_label || record.value.type || ''
+})
+
+const getCollectionName = computed(() => {
+  if (!record.value) return ''
+  
+  // Primero intenta usar la colección precargada
+  if (collection.value) {
+    return collection.value.title || collection.value.name || collection.value.id || ''
+  }
+  
+  // Luego intenta usar los campos directos del record
+  if (record.value.collection_title) {
+    return record.value.collection_title
+  }
+  
+  if (record.value.collections_titles) {
+    return record.value.collections_titles
+  }
+  
+  if (record.value.collection_id) {
+    return `Colección ${record.value.collection_id}`
+  }
+  
+  // Si no hay información de colección
+  return ''
+})
+
 // Función para verificar si un valor es válido (no nulo, no vacío, no array vacío)
 const hasValidValue = (value: any): boolean => {
-  if (value === null || value === undefined) return false
+  if (value === null || value === undefined || value === '') return false
   if (typeof value === 'string' && value.trim() === '') return false
   if (Array.isArray(value) && value.length === 0) return false
   if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) return false

@@ -168,6 +168,7 @@ class GLAMApiClient {
       date_from: options?.dateFrom,
       date_to: options?.dateTo,
       filters: combinedFilters,
+      with_labels: 1, // Esto hace que devuelva los nombres a partir de los ids
     }
 
     const response = await this.request<any>('/api/glam/record', params)
@@ -187,7 +188,7 @@ class GLAMApiClient {
    * Obtiene un record específico por ID
    */
   async getRecordById(id: string): Promise<GLAMRecord> {
-    const rawRecord = await this.request<any>(`/api/glam/record/${id}`)
+    const rawRecord = await this.request<any>(`/api/glam/record/${id}`, { with_labels: 1 })
     return mapRawRecordToGLAMRecord(rawRecord)
   }
 
@@ -217,6 +218,7 @@ class GLAMApiClient {
       q: options?.query,
       institution: options?.institution,
       filters: combinedFilters,
+      with_labels: 1, // Añadido para obtener etiquetas legibles
     }
 
     return this.request<GLAMApiResponse<GLAMCollection>>('/api/glam/collection', params)
@@ -226,7 +228,7 @@ class GLAMApiClient {
    * Obtiene una colección específica por ID
    */
   async getCollectionById(id: string): Promise<GLAMCollection> {
-    return this.request<GLAMCollection>(`/api/glam/collection/${id}`)
+    return this.request<GLAMCollection>(`/api/glam/collection/${id}`, { with_labels: 1 })
   }
 
   /**

@@ -44,6 +44,11 @@ export function useGlam() {
       recordsState.value = 'loading'
       error.value = null
 
+      const optionsWithLabels = {
+        ...options,
+        withLabels: true
+      }
+
       const response = await getRecords(options)
       records.value = response.items || []
       totalRecords.value = response.total || response.items?.length || 0
@@ -64,6 +69,11 @@ export function useGlam() {
     try {
       collectionsState.value = 'loading'
       error.value = null
+
+      const optionsWithLabels = {
+        ...options,
+        withLabels: true
+      }
 
       const response = await getCollections(options)
       collections.value = response.items || []
@@ -118,6 +128,11 @@ export function useGlam() {
     try {
       searchState.value = 'loading'
       error.value = null
+
+      const optionsWithLabels = {
+        ...options,
+        withLabels: true
+      }
 
       const result = await searchAll(query, options)
       records.value = result.records.items || []

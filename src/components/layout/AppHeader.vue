@@ -34,11 +34,14 @@
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
+const emit = defineEmits(['toggleDrawer'])
+
 const route = useRoute()
 const drawer = ref(false)
 
 const toggleDrawer = () => {
   drawer.value = !drawer.value
+  emit('toggleDrawer')
 }
 
 const isActive = (path: string) => {

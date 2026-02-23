@@ -1,7 +1,5 @@
 // src/types/glam.ts
 
-// src/types/glam.ts
-
 /**
  * Interfaz para un ítem/record GLAM
  */
@@ -43,11 +41,16 @@ export interface GLAMRecord {
   title: string;
   type?: any | null;
   versions?: number[];
-  // Añadimos alias comunes para compatibilidad
   imageUrl?: string; // Podríamos mapear thumbnail aquí
   creator?: string | string[]; // Mapear desde author
-  // Campos personalizados para facilitar el uso
   imageUrlFull?: string; // Para almacenar la URL completa de la imagen
+  type_label?: string
+  institution_label?: string
+  collection_label?: string
+  format_label?: string
+  language_label?: string
+  subject_labels?: string[]
+  [key: string]: any
 }
 
 /**
@@ -64,6 +67,9 @@ export interface GLAMCollection {
   type?: string;
   date?: string;
   metadata?: Record<string, any>;
+  type_label?: string
+  institution_label?: string
+  [key: string]: any
   
   // Campos según la estructura real de la API GLAM
   author: string | null;
@@ -105,6 +111,7 @@ export interface GLAMApiResponse<T> {
   pageSize?: number;
   hasNext?: boolean;
   hasPrevious?: boolean;
+  labels_info?: Record<string,any>
 }
 
 /**
@@ -120,6 +127,7 @@ export interface GLAMSearchOptions {
   page?: number
   pageSize?: number
   filters?: GLAMFilter[]
+  withLabels?: boolean
 }
 
 /**
@@ -129,6 +137,7 @@ export interface GLAMFilter {
   field: string
   operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'in' | 'like'
   value: string | number | boolean
+  label?: string
 }
 
 /**
