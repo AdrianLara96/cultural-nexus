@@ -1,6 +1,6 @@
-<!-- src/components/layout/AppFooter.vue -->
+
 <template>
-  <v-footer padless>
+  <v-footer padless color="primary" class="text-white py-4">
     <v-row justify="center" no-gutters>
       <v-col class="py-4 text-center" cols="12">
         <v-btn
@@ -8,17 +8,19 @@
           :key="link.title"
           :href="link.href"
           variant="text"
-          class="mx-2 text-white"
+          class="mx-2 text-secondary"
           target="_blank"
         >
           {{ link.title }}
         </v-btn>
       </v-col>
       
-      <v-col class="py-4 text-center" cols="12">
-        <strong class="d-block text-white">
-          © {{ new Date().getFullYear() }} Cultural Nexus - Todos los derechos reservados
-        </strong>
+      <v-col class="py-4 text-center text-body-2" cols="12">
+        <p class="text-secondary mb-0">
+          <strong>
+            © {{ new Date().getFullYear() }} Cultural Nexus - Todos los derechos reservados
+          </strong>
+        </p>
       </v-col>
     </v-row>
   </v-footer>
@@ -31,19 +33,3 @@ const links = [
   { title: 'Contact', href: '/contact' },
 ]
 </script>
-
-<style scoped>
-.v-footer {
-  background-color: var(--palette-accent1) !important;
-  color: var(--palette-headings) !important;
-}
-
-.v-footer a {
-  color: var(--palette-headings) !important;
-}
-
-.v-footer a:hover {
-  color: var(--palette-accent2) !important;
-  text-decoration: underline;
-}
-</style>
