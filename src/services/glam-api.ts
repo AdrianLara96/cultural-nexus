@@ -18,14 +18,9 @@ function mapRawRecordToGLAMRecord(rawRecord: any): GLAMRecord {
     title: rawRecord.title,
     description: rawRecord.description,
     date: rawRecord.date,
-    // Mapear author a creator
     creator: rawRecord.author,
-    // Mapear thumbnail a imageUrl
     imageUrl: rawRecord.thumbnail,
-    
-    
     collection_title: rawRecord.collection_title,
-    // Mantener otros campos importantes
     author: rawRecord.author,
     children: rawRecord.children,
     collection_id: rawRecord.collection_id,
@@ -250,6 +245,40 @@ class GLAMApiClient {
   }
 }
 
+// Añadimos funciones de búsqueda
+export async function searchRecordsAndCollections(
+  query: string,
+  options: GLAMSearchOptions = {}
+): Promise<{
+  records: GLAMApiResponse<GLAMRecord>,
+  collections: GLAMApiResponse<GLAMCollection>
+}> {
+  const [records, collections] = await Promise.all([
+    getRecords({ ...options, query }),
+    getCollections({ ...options, query })
+  ])
+  
+  return { records, collections }
+}
+
+export async function searchByFilters(
+  filters: GLAMFilter[],
+  options: Omit<GLAMSearchOptions, 'filters'> = {}
+): Promise<{
+  records: GLAMApiResponse<GLAMRecord>,
+  collections: GLAMApiResponse<GLAMCollection>
+}> {
+  const recordsOptions = { ...options, filters }
+  const collectionsOptions = { ...options, filters }
+  
+  const [records, collections] = await Promise.all([
+    getRecords(recordsOptions),
+    getCollections(collectionsOptions)
+  ])
+  
+  return { records, collections }
+}
+
 // Exportamos una instancia singleton del cliente
 export const glamApi = new GLAMApiClient()
 
@@ -266,7 +295,14 @@ export const getCollections = (options?: GLAMSearchOptions) =>
 export const getCollectionById = (id: string) => 
   glamApi.getCollectionById(id)
 
-export const searchAll = (
-  query: string,
+export const searchAllService = async (
+  query: string, 
   options?: Omit<GLAMSearchOptions, 'query'>
-) => glamApi.searchAll(query, options)
+) => {
+  const [records, collections] = await Promise.all([
+    getRecords({ ...options, query }),
+    getCollections({ ...options, query }),
+  ])
+
+  return { records, collections }
+}

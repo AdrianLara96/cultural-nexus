@@ -6,7 +6,8 @@ import {
   getRecordById,
   getCollections,
   getCollectionById,
-  searchAll,
+  searchAllService,
+  searchByFilters
 } from '@/services/glam-api'
 import type {
   GLAMRecord,
@@ -14,6 +15,7 @@ import type {
   GLAMApiResponse,
   GLAMSearchOptions,
   LoadingState,
+  GLAMFilter,
 } from '@/types/glam'
 
 export function useGlam() {
@@ -124,29 +126,70 @@ export function useGlam() {
   /**
    * Busca records y colecciones simultáneamente
    */
-  async function search(query: string, options?: Omit<GLAMSearchOptions, 'query'>) {
-    try {
-      searchState.value = 'loading'
-      error.value = null
+  // src/composables/useGlam.ts
 
-      const optionsWithLabels = {
-        ...options,
-        withLabels: true
-      }
+/**
+ * Busca records y colecciones simultáneamente
+ */
+async function searchAllComposable(query: string, options?: Omit<GLAMSearchOptions, 'query'>) {
+  try {
+    searchState.value = 'loading'
+    error.value = null
 
-      const result = await searchAll(query, options)
-      records.value = result.records.items || []
-      collections.value = result.collections.items || []
-      totalRecords.value = result.records.total || 0
-      totalCollections.value = result.collections.total || 0
+    const result = await searchAllService(query, options)
+    records.value = result.records.items || []
+    collections.value = result.collections.items || []
+    totalRecords.value = result.records.total || 0
+    totalCollections.value = result.collections.total || 0
 
-      searchState.value = 'success'
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Error searching'
-      searchState.value = 'error'
-      console.error('Error searching:', err)
+    searchState.value = 'success'
+    
+    return result
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error searching'
+    searchState.value = 'error'
+    console.error('Error searching:', err)
+    
+    return {
+      records: { items: [], total: 0 },
+      collections: { items: [], total: 0 }
     }
   }
+}
+
+/**
+ * Busca records y colecciones simultáneamente y devuelve los resultados
+ */
+async function search(query: string, options?: Omit<GLAMSearchOptions, 'query'>) {
+  try {
+    searchState.value = 'loading'
+    error.value = null
+
+    const result = await searchAllService(query, options)
+    records.value = result.records.items || []
+    collections.value = result.collections.items || []
+    totalRecords.value = result.records.total || 0
+    totalCollections.value = result.collections.total || 0
+
+    searchState.value = 'success'
+    
+    // Devolver los resultados para que puedan ser usados fuera
+    return {
+      records: result.records,
+      collections: result.collections
+    }
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error searching'
+    searchState.value = 'error'
+    console.error('Error searching:', err)
+    
+    // Devolver resultados vacíos en caso de error
+    return {
+      records: { items: [], total: 0 },
+      collections: { items: [], total: 0 }
+    }
+  }
+}
 
   /**
    * Reset del estado
@@ -161,6 +204,30 @@ export function useGlam() {
     collectionsState.value = 'idle'
     searchState.value = 'idle'
   }
+
+  /**
+   * Búsqueda avanzada con filtros específicos
+   */
+  async function searchAdvanced(filters: GLAMFilter[], options?: Omit<GLAMSearchOptions, 'filters'>) {
+    try {
+      searchState.value = 'loading'
+      error.value = null
+
+      const result = await searchByFilters(filters, { ...options, withLabels: true })
+      records.value = result.records.items || []
+      collections.value = result.collections.items || []
+      totalRecords.value = result.records.total || 0
+      totalCollections.value = result.collections.total || 0
+
+      searchState.value = 'success'
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error searching'
+      searchState.value = 'error'
+      console.error('Error advanced searching:', err)
+    }
+  }
+
+
 
   // Estados computados
   const isLoading = computed(() => 
@@ -195,5 +262,7 @@ export function useGlam() {
     loadCollectionById,
     search,
     reset,
+
+    searchAdvanced,
   }
 }

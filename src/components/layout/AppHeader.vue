@@ -1,30 +1,40 @@
 <!-- src/components/layout/AppHeader.vue -->
 
 <template>
-  <v-app-bar color="primary" flat>
-    <v-app-bar-nav-icon @click="toggleDrawer"></v-app-bar-nav-icon>
-    
-    <v-app-bar-title>
-      <router-link to="/" class="text-decoration-none text-white">
-        Cultural Nexus
-      </router-link>
-    </v-app-bar-title>
+  <div >
+    <v-app-bar color="primary" flat>
+      <v-app-bar-nav-icon @click="toggleDrawer"></v-app-bar-nav-icon>
+      
+      <v-app-bar-title>
+        <router-link to="/" class="text-decoration-none text-secondary">
+          <strong>Cultural Nexus</strong>
+        </router-link>
+      </v-app-bar-title>
 
-    <template v-slot:append>
-      <v-btn icon="mdi-magnify"></v-btn>
-    </template>
-  </v-app-bar>
+      <template v-slot:append>
+        <v-btn 
+          icon="mdi-magnify"
+          to="/search"
+          class="text-white"
+          color="secondary"
+        ></v-btn>
+      </template>
+    </v-app-bar>
+  </div>
 
   <v-navigation-drawer v-model="drawer" temporary>
     <v-list nav>
       <v-list-item link to="/" :active="isActive('/')">
-        <v-list-item-title>Inicio</v-list-item-title>
+        <v-list-item-title><strong>Inicio</strong></v-list-item-title>
       </v-list-item>
       <v-list-item link to="/records" :active="isActive('/records')">
-        <v-list-item-title>Ver todos los registros</v-list-item-title>
+        <v-list-item-title><strong>Registros</strong></v-list-item-title>
       </v-list-item>
       <v-list-item link to="/collections" :active="isActive('/collections')">
-        <v-list-item-title>Ver todas las colecciones</v-list-item-title>
+        <v-list-item-title><strong>Colecciones</strong></v-list-item-title>
+      </v-list-item>
+      <v-list-item link to="/search" :active="isActive('/search')">
+        <v-list-item-title><strong>Búsqueda</strong></v-list-item-title>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
@@ -38,6 +48,8 @@ const emit = defineEmits(['toggleDrawer'])
 
 const route = useRoute()
 const drawer = ref(false)
+
+
 
 const toggleDrawer = () => {
   drawer.value = !drawer.value
