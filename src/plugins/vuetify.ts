@@ -22,13 +22,15 @@ export default createVuetify({
     themes: {
       light: {
         colors: {
-          primary: '#1976D2',
-          secondary: '#424242',
-          accent: '#82B1FF',
-          error: '#FF5252',
-          info: '#2196F3',
-          success: '#4CAF50',
-          warning: '#FFC107',
+          primary: '#455245',    
+          secondary: '#d6d6c6',  
+          surface: '#f5f5f0',
+          accent: '#a35657',     
+          error: '#c96061',      
+          info: '#5c6b5c',       
+          success: '#586958',    
+          warning: '#bfb585',
+          body1: '#2b332b',
         },
       },
     },
