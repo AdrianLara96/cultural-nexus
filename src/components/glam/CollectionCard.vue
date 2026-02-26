@@ -10,16 +10,23 @@ defineProps<{
 
 <template>
   <v-card
-    class="collection-card h-100"
+    class="collection-card h-100 w-100"
     hover
     :to="`/collections/${collection.id}`"
-    color="color || 'secondary'"
+    :color="color || 'secondary'"
   >
+    
+    <!-- Titulo de la collection-->
+    <v-card-title class="text-h6 text-primary px-4 pt-4 pb-2">
+      {{ collection.title || collection.name }}
+    </v-card-title>
+
+    <!-- Imagen de la collection -->
     <v-img
-      v-if="collection.imageUrl || collection.thumbnailUrl"
-      :src="collection.imageUrl || collection.thumbnailUrl"
-      height="300"
-      max-height="300"
+      v-if="collection.thumbnail"
+      :src="collection.thumbnail"
+      height="200"
+      max-height="200"
       cover
       gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
     >
@@ -29,35 +36,14 @@ defineProps<{
         </v-row>
       </template>
     </v-img>
-
-    <v-card-title class="text-h6 text-primary px-4 pt-4 pb-2">
-      {{ collection.title || collection.name }}
-    </v-card-title>
-
-    <v-card-text class="d-flex flex-column flex-grow-1">
-      <div class="mb-2">
-        <v-chip
-          v-if="collection.type"
-          size="small"
-          color="primary"
-          variant="outlined"
-          class="text-primary"
-        >
-          {{ collection.type }}
-        </v-chip>
-      </div>
-
-      <p v-if="collection.description" class="mb-4">
-        {{ collection.description.substring(0, 120) }}{{ collection.description.length > 120 ? '...' : '' }}
-      </p>
-
-      <div class="flex-grow-1"></div>
-
-      <div v-if="collection.itemCount" class="text-caption opacity-75 mb-2">
-        <v-icon size="small" class="mr-1">mdi-file-multiple</v-icon>
-        {{ collection.itemCount }} ítems
-      </div>
-    </v-card-text>
+    <!-- Fallback si no hay thumbnail -->
+    <div 
+      v-else 
+      class="collection-placeholder d-flex align-center justify-center"
+      style="height: 200px; background: rgba(69, 82, 69, 0.1);"
+    >    
+      <v-icon size="64" color="primary" icon="mdi-folder-multiple" />
+    </div>
 
     <v-card-actions>
       <v-btn

@@ -8,34 +8,28 @@
           @click="$router.go(-1)" 
           class="mb-4 mr-4"
           variant="flat"
+          
         >
-          ← Volver a la lista
+          ← Volver
         </v-btn>
         
-        <v-btn 
-          color="secondary" 
-          @click="showMetadata = !showMetadata"
-          class="mb-4"
-          variant="flat"
-        >
-          {{ showMetadata ? 'Ocultar' : 'Mostrar' }} metadatos
-        </v-btn>
+        
       </v-col>
     </v-row>
 
     <!-- Tarjeta del ítem -->
     <v-row justify="center">
-      <v-col cols="12" md="10" lg="8">
+      <v-col cols="12" md="10" lg="6">
         <v-card v-if="record" class="pa-4">
           
           <!-- Título -->
-          <v-card-title class="text-h4 mb-4">
+          <v-card-title class="text-h4 mb-1">
             {{ record.title }}
           </v-card-title>
           
           <!-- Descripción -->
-          <v-card-subtitle v-if="record.description" class="text-h6 mb-4">
-            {{ record.description }}
+          <v-card-subtitle v-if="record.author" class="text-h6 mb-2">
+            <strong>Autor: </strong> {{ record.author }}
           </v-card-subtitle>
 
           <!-- Imagen del registro -->
@@ -47,44 +41,73 @@
               contain
             ></v-img>
           </div>
-
+          
           <!-- Tarjeta de detalles -->
           <v-card-text>
 
             <!-- Metadatos básicos mostrados siempre -->
-            <div class="mb-4">
-              <h3 class="text-h6">Información básica</h3>
+            <div class="mb-2">
+              <h3 class="text-h6 mb-4"><strong>Información básica</strong></h3>
+              
               <v-table density="compact">
                 <tbody>
-
-                  <!-- Autor -->
-                  <tr v-if="hasValidValue(record.author)">
-                    <td><strong> Autor </strong></td>
-                    <td>{{ formatMetadataValue(record.author) }}</td>
-                  </tr>
-                  
-                  <!-- Fecha -->
-                  <tr v-if="hasValidValue(record.date)">
-                    <td><strong> Fecha </strong></td>
-                    <td>{{ record.date }}</td>
-                  </tr>
                   
                   <!-- Tipo de ítem -->
                   <tr v-if="hasValidValue(getTypeValue)">
-                    <td><strong>Tipo</strong></td>
-                    <td>{{ getTypeValue }}</td>
+                    <td>
+                      <v-icon size="small" class="mr-2" icon="mdi-label"/>
+                      <strong>Tipo</strong>
+                    </td>
+                    <td>
+                      <v-chip size="small" color="primary" variant="tonal">
+                        {{ getTypeValue }}
+                      </v-chip>
+                    </td>
                   </tr>
                   
-                  <!-- Colección a la que pertenece -->
-                  <tr v-if="hasValidValue(getCollectionName)">
-                    <td><strong>Colección:</strong></td>
+                  <!-- Colección(es) a la que(s) pertenece -->
+                  <tr v-if="getCollectionsList.length > 0">
                     <td>
-                      <RouterLink 
-                        :to="`/collections/${record.collection_id}`" 
-                        class="text-primary"
-                      >
-                        {{ getCollectionName }}
-                      </RouterLink>
+                      <v-icon size="small" class="mr-2" icon="mdi-folder-multiple" />
+                      <strong>Colección{{ getCollectionsList.length > 1 ? 'es' : '' }}</strong>
+                    </td>
+                    <td>
+                      <div class="d-flex flex-wrap gap-2">
+                        <template v-for="(col, index) in getCollectionsList" :key="`${col.id}-${index}`">
+                          
+                          <!-- Si es routable: mostrar como enlace -->
+                          <RouterLink
+                            v-if="col.isRoutable"
+                            :to="`/collections/${col.id}`"
+                            class="text-decoration-none"
+                          >
+                            <v-chip 
+                              size="small" 
+                              color="primary" 
+                              variant="outlined"
+                              class="mr-2 mb-1"
+                            >
+                              {{ col.name }}
+                              <v-icon size="x-small" icon="mdi-open-in-new" class="ml-1" />
+                            </v-chip>
+                          </RouterLink>
+                          
+                          <!-- Si no es routable: mostrar como texto con tooltip explicativo -->
+                          <v-chip 
+                            v-else
+                            size="small" 
+                            color="secondary" 
+                            variant="tonal"
+                            class="mr-2 mb-1"
+                          >
+                            {{ col.name }}
+                            <v-tooltip activator="parent" location="top">
+                              <span>Detalles de esta colección próximamente</span>
+                            </v-tooltip>
+                          </v-chip>
+                          
+                        </template>
+                      </div>
                     </td>
                   </tr>
 
@@ -92,9 +115,18 @@
               </v-table>
             </div>
 
+            <v-btn 
+              color="secondary" 
+              @click="showMetadata = !showMetadata"
+              class="mb-4 mt-4"
+              variant="flat"
+            >
+              {{ showMetadata ? 'Ocultar' : 'Mostrar' }} información detallada
+            </v-btn>
+
             <!-- Metadatos mostrados solo si showMetadata es true -->
-            <div v-if="showMetadata" class="mb-4">
-              <h3 class="text-h6">Metadatos detallados</h3>
+            <div v-if="showMetadata" class="mt-2">
+              <h3 class="text-h6 mb-4"><strong>Información detallada</strong></h3>
               <v-table density="compact">
                 <tbody>
 
@@ -108,18 +140,6 @@
               </v-table>
             </div>
           </v-card-text>
-
-          <v-card-actions>
-            <v-btn 
-              v-if="record.thumbnail && record.thumbnail.includes('http')" 
-              color="primary" 
-              :href="record.thumbnail" 
-              target="_blank"
-              append-icon="mdi-open-in-new"
-            >
-              Ver imagen original
-            </v-btn>
-          </v-card-actions>
         </v-card>
 
         <v-card v-else-if="loading" class="pa-4 text-center">
@@ -159,13 +179,13 @@ onMounted(async () => {
     const recordData = await getRecordById(recordId.value)
     record.value = recordData
 
-    // Cargar la colección si el record tiene información de colección
+    // Cargar colección principal, si existe
     if (record.value?.collection_id) {
       try {
         const collectionData = await getCollectionById(String(record.value.collection_id))
         collection.value = collectionData
       } catch (error) {
-        console.error('Error loading collection:', error)
+        console.error('Error loading primary collection:', error)
       }
     }
   } catch (error) {
@@ -176,45 +196,82 @@ onMounted(async () => {
   }
 })
 
-// Computeds para obtener los valores correctos
+const getCollectionsList = computed(() => {
+  if (!record.value) return []
+  
+  const collections: Array<{ 
+    id: string | number | null; 
+    name: string; 
+    isRoutable: boolean 
+  }> = []
+
+  const rawTitles = record.value.collections_titles as string | undefined
+
+  if (rawTitles && typeof rawTitles === 'string') {
+    const titles = rawTitles
+      .split(/[;,]/)
+      .map((t: string) => t.trim())
+      .filter((t: string) => t.length > 0)
+
+    titles.forEach((title: string, index: number) => {
+      const collId = record.value!.collection_id ?? null  // ! para afirmar que no es null
+      const isRoutable = (index === 0 && collId !== null)
+      
+      collections.push({
+        id: isRoutable ? collId : null,
+        name: title,
+        isRoutable
+      })
+    })
+    
+    if (collections.length > 0) return collections
+  }   
+  
+  const primaryCollection = collection.value
+  if (primaryCollection) {
+    const collName: string = primaryCollection.title || primaryCollection.name || String(primaryCollection.id)
+    return [{
+      id: primaryCollection.id,
+      name: collName,
+      isRoutable: true
+    }]
+  }
+
+  const collectionTitle = record.value.collection_title
+  if (collectionTitle && typeof collectionTitle === 'string') {
+    const collId = record.value.collection_id ?? null
+    const hasValidId: boolean = collId !== null && collId !== undefined
+    return [{
+      id: hasValidId ? collId : null,
+      name: collectionTitle,
+      isRoutable: hasValidId
+    }]
+  }
+
+    const fallbackId = record.value.collection_id
+  if (fallbackId !== null && fallbackId !== undefined) {
+    return [{
+      id: fallbackId,
+      name: `Colección ${fallbackId}`,
+      isRoutable: true
+    }]
+  }
+
+  return []
+})
+
+// Computado para tipo de ítem
 const getTypeValue = computed(() => {
   if (!record.value) return ''
   
-  // Buscar tipo en resource_class (es un array [id, nombre])
   if (record.value.resource_class && Array.isArray(record.value.resource_class) && record.value.resource_class.length >= 2) {
-    return record.value.resource_class[1] // Segundo elemento es el nombre
+    return record.value.resource_class[1]
   }
   
-  // Buscar tipo en type_label o type
   return record.value.type_label || record.value.type || ''
 })
 
-const getCollectionName = computed(() => {
-  if (!record.value) return ''
-  
-  // Primero intenta usar la colección precargada
-  if (collection.value) {
-    return collection.value.title || collection.value.name || collection.value.id || ''
-  }
-  
-  // Luego intenta usar los campos directos del record
-  if (record.value.collection_title) {
-    return record.value.collection_title
-  }
-  
-  if (record.value.collections_titles) {
-    return record.value.collections_titles
-  }
-  
-  if (record.value.collection_id) {
-    return `Colección ${record.value.collection_id}`
-  }
-  
-  // Si no hay información de colección
-  return ''
-})
-
-// Función para verificar si un valor es válido (no nulo, no vacío, no array vacío)
+// Función para verificar si un valor es válido
 const hasValidValue = (value: any): boolean => {
   if (value === null || value === undefined || value === '') return false
   if (typeof value === 'string' && value.trim() === '') return false
@@ -232,9 +289,8 @@ const getValidMetadataFields = computed<[string, any][]>(() => {
   }) as [string, any][]
 })
 
-// Formatear la clave de metadata para mostrarla de forma legible
+// Formatear la clave de metadata
 const formatMetadataKey = (key: string): string => {
-  // Convertir dcterms:title a "Título" o similar
   const replacements: Record<string, string> = {
     'dcterms:title': 'Título',
     'dcterms:description': 'Descripción',
@@ -247,39 +303,28 @@ const formatMetadataKey = (key: string): string => {
     'dcterms:subject': 'Asunto',
     'dcterms:publisher': 'Editor',
     'dcterms:rights': 'Derechos',
-    'dcterms:contributor': 'Colaborador',
-    'dcterms:coverage': 'Cobertura',
-    'dcterms:relation': 'Relación',
-    'dcterms:source': 'Fuente',
   }
   
-  return replacements[key] || key.replace(/dcterms:/g, '').replace(/dc:/g, '').replace(/_/g, ' ').split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  return replacements[key] || key.replace(/dcterms:/g, '').replace(/dc:/g, '').replace(/_/g, ' ')
+    .split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 }
 
-// Formatear el valor de metadata para mostrarlo correctamente
+// Formatear el valor de metadata
 const formatMetadataValue = (value: any): string => {
-  if (value === null || value === undefined) {
-    return ''
-  }
+  if (value === null || value === undefined) return ''
   
-  // Si es un objeto RDF/JSON-LD con @value
   if (typeof value === 'object' && value !== null && '@value' in value) {
     return String(value['@value'])
   }
   
-  // Si es un array que puede contener objetos RDF
   if (Array.isArray(value)) {
     return value.map(item => {
       if (typeof item === 'object' && item !== null && '@value' in item) {
-        // Si es un objeto RDF, extraer @value
         return String(item['@value'])
       } else if (typeof item === 'object' && item !== null) {
-        // Si es un objeto no RDF, intentar extraer propiedades comunes
         if (item.label) return item.label
         if (item.name) return item.name
         if (item.value) return item.value
-        if (item.text) return item.text
         return JSON.stringify(item)
       }
       return String(item)
@@ -287,20 +332,22 @@ const formatMetadataValue = (value: any): string => {
   }
   
   if (typeof value === 'object') {
-    // Manejar otros objetos
     if (value.label) return value.label
     if (value.name) return value.name
     if (value.value) return value.value
-    if (value.text) return value.text
-    
     try {
       return JSON.stringify(value, null, 2)
-    } catch (e) {
+    } catch {
       return '[Objeto complejo]'
     }
   }
   
-  // Para cualquier otro tipo, convertir a string
   return String(value)
 }
+
+console.log('Tipos verificados:', {
+  hasCollectionsTitles: 'collections_titles' in (record.value || {}),
+  sampleValue: record.value?.collections_titles,
+  typeOf: typeof record.value?.collections_titles
+})
 </script>

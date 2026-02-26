@@ -5,6 +5,7 @@ import { useGlam } from '@/composables/useGlam'
 import RecordCard from '@/components/glam/RecordCard.vue'
 import CollectionCard from '@/components/glam/CollectionCard.vue'
 import { onMounted, ref, computed, watch } from 'vue'
+import { useDisplay } from 'vuetify'
 
 const { siteTitle, loading: siteLoading } = useSite()
 const { 
@@ -15,38 +16,63 @@ const {
   isLoading 
 } = useGlam()
 
-const recordsPerPage = 4
-const currentPage = ref(1)
+const display = useDisplay()
+
+// Configuración de ítems por fila según breakpoint
+const itemsPerRow = computed(() => {
+  switch (display.name.value) {
+    case 'xs': return 1 
+    case 'sm': return 2  
+    case 'md': return 3 
+    case 'lg': return 4  
+    case 'xl': return 4  
+    default: return 4
+  }
+})
+
+// Paginación records
+const currentPageRecords = ref(1)
 
 const paginatedRecords = computed(() => {
   if (!records.value || records.value.length === 0) return []
 
-  const start = (currentPage.value -1) * recordsPerPage
-  const end = start + recordsPerPage
+  const start = (currentPageRecords.value -1) * itemsPerRow.value
+  const end = start + itemsPerRow.value
   return records.value.slice(start, end)
 })
 
-const totalPages = computed(() => {
+const totalPagesRecords = computed(() => {
   if (!records.value || records.value.length === 0) return 0
 
-  return Math.ceil(records.value.length/ recordsPerPage)
+  return Math.ceil(records.value.length/ itemsPerRow.value)
 })
 
-// Resetear a página 1 cuando cambian los registros
-watch(records, () => {
-  currentPage.value = 1
-}, { immediate: true })
+// Paginación collections
+const currentPageCollections = ref(1)
 
-const changePage = (page: number) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
-}
+const paginatedCollections = computed(() => {
+  if (!collections.value || collections.value.length === 0) return []
+  
+  const start = (currentPageCollections.value - 1) * itemsPerRow.value
+  const end = start + itemsPerRow.value
+  return collections.value.slice(start, end)
+})
+
+const totalPagesCollections = computed(() => {
+  if (!collections.value || collections.value.length === 0) return 0
+  return Math.ceil(collections.value.length / itemsPerRow.value)
+})
+
+// Resetear a página 1 cuando cambian los datos o el breakpoint
+watch([records, collections, () => display.name.value], () => {
+  currentPageRecords.value = 1
+  currentPageCollections.value = 1
+}, { immediate: true })
 
 onMounted(async () => {
   await Promise.all([
     loadRecords({ page: 1, pageSize: 20 }),
-    loadCollections({ page: 1, pageSize: 4 })
+    loadCollections({ page: 1, pageSize: 20 })
   ])
 })
 </script>
@@ -62,10 +88,10 @@ onMounted(async () => {
     </v-row>
 
     <!-- Pasa del loading state -->
-    <v-row v-else>
+    <v-row v-else class="justify-center">
 
-      <!-- Sección de Records destacados -->
-      <v-col cols="12" class="mt-4">
+      <!-- Sección de Records -->
+      <v-col cols="10" class="mt-4">
         <v-card elevation="0" color="secondary" class="h-100">
 
           <!-- Título y botón -->
@@ -83,7 +109,7 @@ onMounted(async () => {
             </v-btn>
           </v-card-title>
 
-          <!-- Tarjetas de registros -->
+          <!-- Tarjetas de records -->
           <v-card-text class="pa-4">
             <v-row fill-height>
               <v-col
@@ -100,15 +126,15 @@ onMounted(async () => {
               </v-col>
             </v-row>
 
-            <!-- Paginación (solo si hay más de 4 registros) -->
-            <v-row v-if="totalPages > 1" justify="center" class="mt-4">
+            <!-- Paginación records -->
+            <v-row v-if="totalPagesRecords > 1" justify="center" class="mt-4">
               <v-col cols="12" class="d-flex justify-center">
                 <v-pagination
-                  v-model="currentPage"
-                  :length="totalPages"
+                  v-model="currentPageRecords"
+                  :length="totalPagesRecords"
                   :total-visible="5"
                   color="primary"
-                  @input="changePage"
+                  class="justify-center"
                 />
               </v-col>
             </v-row>
@@ -116,8 +142,8 @@ onMounted(async () => {
         </v-card>
       </v-col>
 
-      <!-- Sección de Colecciones destacadas -->
-      <v-col cols="12" class="mt-4">
+      <!-- Sección collections -->
+      <v-col cols="10" class="mt-4">
         <v-card elevation="0" color="secondary" class="h-100">
 
           <!-- Título y botón -->
@@ -138,18 +164,31 @@ onMounted(async () => {
           <v-card-text class="pa-4">
             <v-row fill-height>
               <v-col
-                v-for="collection in collections"
+                v-for="collection in paginatedCollections"
                 :key="collection.id"
                 cols="12"
                 sm="6"
                 md="4"
-                lg="4"
-                xl="4"
+                lg="3"
+                xl="3"
                 class="d-flex"
               >
                 <CollectionCard :collection="collection" color="surface" class="h-100 w-100"/>
               </v-col>
             </v-row>
+
+            <!-- Pagiación collections -->
+            <v-row v-if="totalPagesCollections > 1" justify="center" class="mt-4">
+              <v-col cols="12">
+                <v-pagination
+                  v-model="currentPageCollections"
+                  :length="totalPagesCollections"
+                  :total-visible="5"
+                  color="primary"
+                  class="justify-center"
+                />
+              </v-col>
+            </v-row> 
           </v-card-text>
         </v-card>
       </v-col>

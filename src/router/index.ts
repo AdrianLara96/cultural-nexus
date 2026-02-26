@@ -7,8 +7,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'Home',
+      component: () => import('@/views/HomeView.vue')
     },
     {
       path: '/records',
@@ -34,7 +34,7 @@ const router = createRouter({
     },
     {
       path: '/search',
-      name: 'Search',
+      name: 'SearchResults',
       component: () => import('@/views/SearchResultsView.vue')
     }
   ],

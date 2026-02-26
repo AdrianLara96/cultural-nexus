@@ -77,7 +77,7 @@ export function useGlam() {
         withLabels: true
       }
 
-      const response = await getCollections(options)
+      const response = await getCollections(optionsWithLabels)
       collections.value = response.items || []
       totalCollections.value = response.total || response.items?.length || 0
 
@@ -166,6 +166,7 @@ async function search(query: string, options?: Omit<GLAMSearchOptions, 'query'>)
     error.value = null
 
     const result = await searchAllService(query, options)
+    
     records.value = result.records.items || []
     collections.value = result.collections.items || []
     totalRecords.value = result.records.total || 0

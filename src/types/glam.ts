@@ -1,34 +1,31 @@
 // src/types/glam.ts
 
-// Asegúrate de que GLAMFilter tenga los operadores correctos
-export interface GLAMFilter {
-  field: string
-  operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'in' | 'like'
-  value: string | number | boolean
-}
-
-// El resto de tus tipos permanece igual
 export interface GLAMRecord {
   id: string
-  identifier?: string
   title: string
-  description?: string
-  type: string
-  institution?: string
-  collectionId?: string
+  author?: string
+  description?: any
   date?: string
+  thumbnailUrl?: string
+  collection_id?: string | number | null
+  collection_ids?: string[]
+  collection_title?: string | null
+  collection_titles?: string | string [] | null
+  collections_titles?: string[]
+  type?: string | null
+  type_label?: string | null
+  resource_class?: [string, string] | null
+  metadata_fields?: Record<string, any> | null
+  identifier?: string
+  institution?: string
   creator?: string | string[]
   format?: string
   language?: string
   rights?: string
   subject?: string[]
   imageUrl?: string
-  thumbnailUrl?: string
   sourceUrl?: string
   metadata?: Record<string, any>
-  
-  // Campos adicionales que se incluyen con with_labels=1
-  type_label?: string
   institution_label?: string
   collection_label?: string
   format_label?: string
@@ -38,11 +35,16 @@ export interface GLAMRecord {
 }
 
 export interface GLAMCollection {
-  id: string
-  identifier?: string
-  name: string
-  title: string
+  id: string | number
+  title?: string
+  name?: string
+  parent_id?: [number, string]
+  parent?: [number, string]
   description?: string
+  thumbnail?: string
+  thumbnail_media?: [number, string]
+  thumbnail_media_id?: [number, string]
+  identifier?: string
   institution?: string
   itemCount?: number
   records?: GLAMRecord[]
@@ -67,17 +69,38 @@ export interface GLAMApiResponse<T> {
   labels_info?: Record<string, any>
 }
 
+export interface GLAMFilter {
+  id?: string
+  field: string | null
+  operator: 'contains' | 'eq' | '=' | 'startsWith' | 'isEmpty' | 'notEmpty' | 'gt' | 'lt' | '!=' | '>=' | '<=' | 'in' | 'like'
+  value: string | number | boolean
+}
+
 export interface GLAMSearchOptions {
   query?: string
+  page?: number
+  pageSize?: number
+  filters?: GLAMFilter[]
+  scope?: 'records' | 'collections' | 'all'
+  combine?: 'AND' | 'OR'
+  withLabels?: boolean
+  [key: string]: any
   type?: string
   institution?: string
   collection?: string
   dateFrom?: string
   dateTo?: string
-  page?: number
-  pageSize?: number
-  filters?: GLAMFilter[]
-  withLabels?: boolean
+}
+
+export interface GLAMSearchResult {
+  records: {
+    items: GLAMRecord[]
+    total?: number
+  }
+  collections: {
+    items: GLAMCollection[]
+    total?: number
+  }
 }
 /**
  * Estados de carga

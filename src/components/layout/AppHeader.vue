@@ -3,9 +3,10 @@
 <template>
   <div >
     <v-app-bar color="primary" flat>
+
       <v-app-bar-nav-icon @click="toggleDrawer"></v-app-bar-nav-icon>
       
-      <v-app-bar-title>
+      <v-app-bar-title class="text-center">
         <router-link to="/" class="text-decoration-none text-secondary">
           <strong>Cultural Nexus</strong>
         </router-link>

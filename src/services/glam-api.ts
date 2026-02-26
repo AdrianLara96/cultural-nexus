@@ -94,9 +94,11 @@ class GLAMApiClient {
     
     // Construir URL completa con parámetros
     let url = baseUrl
+
     if (params && Object.keys(params).length > 0) {
       const queryString = Object.entries(params)
-        .filter(([_, value]) => value !== undefined && value !== null)
+        // ✅ Añadido: value !== '' para filtrar strings vacíos
+        .filter(([_, value]) => value !== undefined && value !== null && value !== '')
         .map(([key, value]) => {
           if (key === 'filters') {
             return `${key}=${encodeURIComponent(JSON.stringify(value))}`
@@ -105,7 +107,10 @@ class GLAMApiClient {
         })
         .join('&')
       
-      url = `${baseUrl}?${queryString}`
+      // ✅ Solo añadir ? si hay queryString
+      if (queryString) {
+        url = `${baseUrl}?${queryString}`
+      }
     }
 
     const config: RequestInit = {
@@ -137,8 +142,10 @@ class GLAMApiClient {
    * Obtiene una lista de records/ítems
    * Incluye automáticamente el filtro por SITE_ID
    */
-  async getRecords(
-    options?: GLAMSearchOptions
+  // En GLAMApiClient.getRecords() - Reemplaza TODO el método con esto:
+
+async getRecords(
+  options?: GLAMSearchOptions
   ): Promise<GLAMApiResponse<GLAMRecord>> {
     // Filtro por sitio (SITE_ID)
     const siteFilter: GLAMFilter = {
@@ -147,31 +154,43 @@ class GLAMApiClient {
       value: SITE_ID,
     }
 
-    // Combina los filtros del usuario con el filtro del sitio
+    // ✅ NUEVO: Si hay query, convertirlo en filtro por título
+    const searchFilters: GLAMFilter[] = []
+    if (options?.query?.trim()) {
+      searchFilters.push({
+        field: 'title',
+        operator: 'contains',
+        value: options.query.trim()
+      })
+    }
+
+    // Combina todos los filtros: site + search + user filters
     const combinedFilters = [
       siteFilter,
+      ...searchFilters,
       ...(options?.filters || []),
     ]
 
     const params: Record<string, any> = {
       page: options?.page || 1,
       page_size: options?.pageSize || 20,
-      q: options?.query,
-      type: options?.type,
-      institution: options?.institution,
-      collection: options?.collection,
-      date_from: options?.dateFrom,
-      date_to: options?.dateTo,
-      filters: combinedFilters,
-      with_labels: 1, // Esto hace que devuelva los nombres a partir de los ids
+      filters: combinedFilters,  // ✅ Ya incluye todo
+      with_labels: 1,
+      // ✅ NO añadir params.q - usamos filtros en su lugar
     }
+
+    // Limpiar undefined/null/empty antes de enviar
+    Object.keys(params).forEach(key => {
+      if (params[key] === undefined || params[key] === null || params[key] === '') {
+        delete params[key]
+      }
+    })
 
     const response = await this.request<any>('/api/glam/record', params)
     
-    // Transformar la respuesta para mapear los campos
     return {
-      items: response.items.map(mapRawRecordToGLAMRecord),
-      total: response.total,
+      items: response.items?.map(mapRawRecordToGLAMRecord) || [],
+      total: response.total || 0,
       page: response.page,
       pageSize: response.pageSize,
       hasNext: response.hasNext,
@@ -191,8 +210,10 @@ class GLAMApiClient {
    * Obtiene una lista de colecciones
    * Incluye automáticamente el filtro por SITE_ID
    */
-  async getCollections(
-    options?: GLAMSearchOptions
+  // En GLAMApiClient.getCollections() - Reemplaza TODO el método con esto:
+
+async getCollections(
+  options?: GLAMSearchOptions
   ): Promise<GLAMApiResponse<GLAMCollection>> {
     // Filtro por sitio (SITE_ID)
     const siteFilter: GLAMFilter = {
@@ -201,20 +222,36 @@ class GLAMApiClient {
       value: SITE_ID,
     }
 
-    // Combina los filtros del usuario con el filtro del sitio
+    // ✅ NUEVO: Si hay query, convertirlo en filtro por título
+    const searchFilters: GLAMFilter[] = []
+    if (options?.query?.trim()) {
+      searchFilters.push({
+        field: 'title',  // o 'name' si tu API usa ese campo para colecciones
+        operator: 'contains',
+        value: options.query.trim()
+      })
+    }
+
+    // Combina todos los filtros
     const combinedFilters = [
       siteFilter,
+      ...searchFilters,
       ...(options?.filters || []),
     ]
 
     const params: Record<string, any> = {
       page: options?.page || 1,
       page_size: options?.pageSize || 20,
-      q: options?.query,
-      institution: options?.institution,
       filters: combinedFilters,
-      with_labels: 1, // Añadido para obtener etiquetas legibles
+      with_labels: 1,
     }
+
+    // Limpiar undefined/null/empty
+    Object.keys(params).forEach(key => {
+      if (params[key] === undefined || params[key] === null || params[key] === '') {
+        delete params[key]
+      }
+    })
 
     return this.request<GLAMApiResponse<GLAMCollection>>('/api/glam/collection', params)
   }
@@ -292,17 +329,83 @@ export const getRecordById = (id: string) =>
 export const getCollections = (options?: GLAMSearchOptions) => 
   glamApi.getCollections(options)
 
-export const getCollectionById = (id: string) => 
-  glamApi.getCollectionById(id)
+// src/services/glam-api.ts
 
 export const searchAllService = async (
   query: string, 
   options?: Omit<GLAMSearchOptions, 'query'>
 ) => {
+  // ✅ Solo pasar query si tiene contenido real
+  const queryParam = query?.trim() || undefined
+  
   const [records, collections] = await Promise.all([
-    getRecords({ ...options, query }),
-    getCollections({ ...options, query }),
+    getRecords({ ...options, query: queryParam }),
+    getCollections({ ...options, query: queryParam }),
   ])
 
   return { records, collections }
+}
+
+// Cache global de colecciones por nombre
+const collectionsCache = new Map<string, GLAMCollection>()
+const collectionsByIdCache = new Map<number | string, GLAMCollection>()
+
+// Obtener todas las colecciones (para hacer lookup por nombre)
+export async function getAllCollections(): Promise<GLAMCollection[]> {
+  try {
+    const response = await fetch('/api/glam/collection?page_size=100&with_labels=1')
+    const data = await response.json()
+    return data.items || data || []
+  } catch (error) {
+    console.error('Error fetching all collections:', error)
+    return []
+  }
+}
+
+// Buscar colección por nombre exacto
+export function findCollectionByName(name: string): GLAMCollection | undefined {
+  const normalizedName = name.toLowerCase().trim()
+  
+  // Buscar en cache
+  for (const [key, collection] of collectionsCache.entries()) {
+    if (key === normalizedName) {
+      return collection
+    }
+  }
+  
+  return undefined
+}
+
+// Cargar colecciones en cache
+export async function loadCollectionsCache(): Promise<void> {
+  if (collectionsCache.size > 0) return // Ya cargado
+  
+  const collections = await getAllCollections()
+  collections.forEach(col => {
+    const name = (col.name || col.title || '').toLowerCase().trim()
+    if (name) {
+      collectionsCache.set(name, col)
+      collectionsByIdCache.set(col.id, col)
+    }
+  })
+}
+
+// Obtener colección por ID
+export async function getCollectionById(id: string | number): Promise<GLAMCollection> {
+  // Check cache first
+  if (collectionsByIdCache.has(id)) {
+    return collectionsByIdCache.get(id)!
+  }
+  
+  const response = await fetch(`/api/glam/collection/${id}?with_labels=1`)
+  const data = await response.json()
+  
+  // Cache it
+  collectionsByIdCache.set(id, data)
+  const name = (data.name || data.title || '').toLowerCase().trim()
+  if (name) {
+    collectionsCache.set(name, data)
+  }
+  
+  return data
 }
