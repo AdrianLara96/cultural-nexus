@@ -82,7 +82,21 @@ import type { SearchPayload, CollectionOption } from '@/types/search'
 import type { GLAMFilter } from '@/types/glam'
 
 const route = useRoute()
-const { records, collections, search: searchApi, isLoading } = useGlam()
+const { records, collections, search: searchApi, isLoading, loadCollections } = useGlam()
+
+const collectionsLoaded = ref(false)
+
+onMounted(async () => {
+  // Cargar colecciones solo si no se han cargado aún
+  if (!collectionsLoaded.value) {
+    await loadCollections({ page: 1, pageSize: 100 })
+    collectionsLoaded.value = true
+  }
+  
+  if (route.query.q || route.query.rules) {
+    executeSearchFromUrl()
+  }
+})
 
 const searchScope = ref<'records' | 'collections' | 'all'>('all')
 const totalRecords = ref<number>(0)
@@ -94,7 +108,8 @@ const searchFields = [
   { title: 'Descripción', value: 'description' },
   { title: 'Creador', value: 'creator' },
   { title: 'Fecha', value: 'date' },
-  { title: 'Tipo', value: 'type' }
+  { title: 'Tipo', value: 'type' },
+  { title: 'Colección', value: 'collections' }  
 ]
 
 // Función que ejecuta la búsqueda leyendo de la URL
@@ -153,6 +168,17 @@ watch(
 
 // También ejecuta al montar el componente
 onMounted(() => {
+  if (route.query.q || route.query.rules) {
+    executeSearchFromUrl()
+  }
+})
+
+onMounted(async () => {
+  // Cargar colecciones para el dropdown de búsqueda avanzada
+  if (collections.value.length === 0) {
+    await loadCollections({ page: 1, pageSize: 100 })
+  }
+  
   if (route.query.q || route.query.rules) {
     executeSearchFromUrl()
   }

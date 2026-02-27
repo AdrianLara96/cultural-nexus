@@ -42,7 +42,7 @@
 // En src/components/search/SearchBar.vue
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router' // ✅ Importar useRouter
+import { useRoute, useRouter } from 'vue-router' 
 import AdvancedSearchDialog from './AdvancedSearchDialog.vue'
 import type { GLAMCollection } from '@/types/glam'
 import type { SearchPayload, CollectionOption } from '@/types/search'
@@ -64,14 +64,25 @@ const search = ref('')
 const advancedOpen = ref(false)
 
 const collectionOptions = computed<CollectionOption[]>(() => {
-  if (!props.collections) return []
+  
+  if (!props.collections || props.collections.length === 0) {
+
+    return []
+  }
+
   return props.collections
-    .filter((c): c is GLAMCollection & { title: string } => !!(c.id && c.title))
+    .filter((c): c is GLAMCollection & { title: string } => {
+      const hasId = !!(c.id || c.id === 0)
+      const hasTitle = !!(c.title || c.name)
+      return hasId && hasTitle
+    })
     .map(c => ({
       id: c.id,
-      title: c.title
+      title: c.title || c.name || 'Sin título'
     }))
 })
+
+
 
 watch(() => route.query.q, (val) => { 
   search.value = (val as string) || '' 

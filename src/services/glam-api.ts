@@ -171,13 +171,30 @@ async getRecords(
       ...(options?.filters || []),
     ]
 
+    console.log('🔍 Combined filters:', JSON.stringify(combinedFilters, null, 2))
+
+    const fieldMapping: Record<string, string> = {
+      'collections': 'collections',  
+      'title': 'title',
+      'description': 'description',
+      'creator': 'creator',
+      'date': 'date',
+      'type': 'type'
+    }
+
+    const mappedFilters = combinedFilters.map(({ id, ...f }) => ({
+      ...f,
+      field: fieldMapping[f.field || ''] || f.field
+    }))
+
     const params: Record<string, any> = {
       page: options?.page || 1,
       page_size: options?.pageSize || 20,
-      filters: combinedFilters,  // ✅ Ya incluye todo
+      filters: mappedFilters,  
       with_labels: 1,
-      // ✅ NO añadir params.q - usamos filtros en su lugar
     }
+
+
 
     // Limpiar undefined/null/empty antes de enviar
     Object.keys(params).forEach(key => {

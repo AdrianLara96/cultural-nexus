@@ -68,15 +68,29 @@
               />
               <v-select 
                 v-model="rule.operator" 
-                :items="operatorOptions" 
+                :items="getOperatorOptions(rule.field)" 
                 label="Op." 
                 variant="outlined" 
                 density="compact" 
                 style="max-width: 120px" 
                 hide-details 
               />
+              <!-- Valor: Select para colección, TextField para otros -->
+              <v-select
+                v-if="rule.field === 'collection_id'"
+                v-model="rule.value"
+                :items="collectionSelectOptions"
+                label="Colección"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="flex-grow-1"
+                min-width="200px"
+                item-title="title"
+                item-value="id"
+              />              
               <v-text-field 
-                v-if="!['isEmpty', 'notEmpty'].includes(rule.operator)" 
+                v-else-if="!['isEmpty', 'notEmpty'].includes(rule.operator)" 
                 v-model="rule.value" 
                 label="Valor" 
                 variant="outlined" 
@@ -118,6 +132,13 @@ import { reactive, computed, watch } from 'vue'
 import type { SearchPayload, CollectionOption } from '@/types/search'
 import type { GLAMFilter } from '@/types/glam'
 
+interface FilterRule {
+  id: string
+  field: string | null
+  operator: string
+  value: string | number
+}
+
 const props = defineProps<{
   modelValue: boolean
   fields?: Array<string | { title: string; value: string }>
@@ -135,7 +156,6 @@ const open = computed({
   set: (v) => emit('update:modelValue', v)
 })
 
-// ✅ Usa GLAMFilter directamente en lugar de FilterRule
 const form = reactive<SearchPayload & { rules: GLAMFilter[] }>({
   scope: 'records',
   query: '',
@@ -145,7 +165,6 @@ const form = reactive<SearchPayload & { rules: GLAMFilter[] }>({
 
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
-// ✅ CORRECCIÓN: Ahora usa GLAMFilter directamente
 const resetForm = () => {
   form.scope = props.defaults?.scope || 'records'
   form.query = props.defaults?.query || ''
@@ -179,7 +198,7 @@ const fieldOptions = computed(() => {
     { title: 'Creador', value: 'creator' },
     { title: 'Fecha', value: 'date' },
     { title: 'Tipo', value: 'type' },
-    { title: 'Colección', value: 'collection' }
+    { title: 'Colección', value: 'collection_id' }
   ]
   
   if (props.fields?.length) {
@@ -189,15 +208,40 @@ const fieldOptions = computed(() => {
   return defaultFields
 })
 
-const operatorOptions = [
-  { title: 'Contiene', value: 'contains' },
-  { title: 'Es igual a', value: 'eq' },
-  { title: 'Empieza con', value: 'startsWith' },
-  { title: 'Vacío', value: 'isEmpty' },
-  { title: 'No vacío', value: 'notEmpty' },
-  { title: 'Mayor que', value: 'gt' },
-  { title: 'Menor que', value: 'lt' }
-]
+const getOperatorOptions = (field: string | null) => {
+  const textOperators = [
+    { title: 'Contiene', value: 'contains' },
+    { title: 'Es igual a', value: 'eq' },
+    { title: 'Empieza con', value: 'startsWith' },
+    { title: 'Vacío', value: 'isEmpty' },
+    { title: 'No vacío', value: 'notEmpty' }
+  ]
+  
+  // Para colección, solo mostrar operadores relevantes
+  if (field === 'collection_id') {
+    return [
+      { title: 'Es igual a', value: 'eq' },
+      { title: 'Vacío', value: 'isEmpty' },
+      { title: 'No vacío', value: 'notEmpty' }
+    ]
+  }
+  
+  return textOperators
+}
+
+const collectionSelectOptions = computed(() => {
+  
+  if (!props.collections || props.collections.length === 0) {
+    return []
+  }
+  
+  return props.collections.map(c => ({
+    id: c.id,
+    title: c.title
+  }))
+})
+
+
 
 function addRule() { 
   form.rules.push({ 
@@ -214,28 +258,26 @@ function removeRule(idx: number) {
 }
 
 function emitSearch() {
-  // Type guard explícito que verifica field no es null y value es string
   const validRules = form.rules.filter((r): r is GLAMFilter => {
-    // Si el campo es null, no es válido
     if (!r.field) return false
     
-    // Si el operador es isEmpty/notEmpty, no necesita value
     if (['isEmpty', 'notEmpty'].includes(r.operator)) return true
     
-    // Para otros operadores, value debe ser string no vacío
     if (typeof r.value === 'string') {
       return r.value.trim() !== ''
     }
     
-    // Si value es number o boolean, también es válido
     return r.value !== null && r.value !== undefined
   })
+
+  const cleanRules = validRules.map(({ id, ...rule }) => rule)
+
   
   emit('doAdvancedSearch', { 
     scope: form.scope,
     query: form.query,
     combine: form.combine,
-    rules: validRules
+    rules: cleanRules
   })
   open.value = false
 }
